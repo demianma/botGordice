@@ -60,16 +60,15 @@ if (file_exists($varfile)){
 }
 else {
 	$scores = array();
-	var_dump($scores);
 	upDate();
 }
 
 //SLACK JSON GEN
 function geraJSON($url, $f){
 	$attachment = array(
-	"author_name" => "Top Gordice 2018 da Salinha!",
+	"title" => "Top Gordice 2018",
 	"image_url" => $url . $f,
-	"thumb_url" => $url . "topgordice.png",
+	"thumb_url" => $url . "topgordiceicon.png",
 	"footer" => "Use o comando '/gordice help' para lista de comandos. Imagem temporária.",
 	"ts" => 123456789
 	);
@@ -77,8 +76,10 @@ function geraJSON($url, $f){
 	$attachments = array($attachment);
 
 	$final  = array(
-	"response_type" => "in_channel", 
+	"response_type" => "in_channel",
+	"text" => "Vamos dar uma olhada na gordice da salinha...",
 	"attachments" => $attachments);
+	
 
 	$myJSON = json_encode($final);
 
