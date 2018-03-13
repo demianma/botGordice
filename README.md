@@ -24,7 +24,7 @@ Depois, adicione uma slash command ao Slack:
 9. Escolha GET como método
 10. Ignore o token
 11. Escolha um nome ou simplesmente Gordice
-12. Faça o upload de uma imagem ou escolha um ícone padrão
+12. Escolha o topgordiceicon.png como ícone um ícone padrão
 13. Escreva uma descrição do tipo “Controle das gordices da turma”
 14. Escreva em Hit [add | del | update] ou help para ajuda.
 15. Coloque a mesma descrição no Descriptive blablabla
