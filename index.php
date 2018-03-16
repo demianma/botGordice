@@ -57,6 +57,8 @@ function upDate(){
 //RECOVER ARRAY scores FROM VAR FILE OR CREATE IT
 if (file_exists($varfile)){
 	$scores = json_decode(file_get_contents($varfile),true);
+	asort($scores);
+	$scores = array_reverse($scores);
 }
 else {
 	$scores = array();
@@ -146,10 +148,12 @@ switch ($function)
 	
 	//SHOW IMAGE
 	case "":
-		//clean old images
-		foreach(glob('images/*.*') as $file)
-		if(is_file($file))
-        @unlink($file);
+		//clean older than 7 days images
+		foreach(glob($imgfolder . '*.*') as $file) {
+			if((time() - filectime($file)) > 604800) {
+				@unlink($file);
+			}
+		}
 	
 		//build image
 		$rImg = ImageCreateFromJPEG( "topgordice.jpg" );
