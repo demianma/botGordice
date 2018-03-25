@@ -24,7 +24,8 @@
 
 //GET FROM SLACK AND OTHER STUFF
 $prefix = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://";
-$url = $prefix . $_SERVER['SERVER_NAME'] . substr($_SERVER['PHP_SELF'], 0, strrpos($_SERVER['PHP_SELF'], '/'));
+$url = $prefix . $_SERVER['SERVER_NAME'] . substr($_SERVER['PHP_SELF'], 
+	0, strrpos($_SERVER['PHP_SELF'], '/'));
 $imgfolder = "images/";
 $today = date('Y-m-d', time());
 $todayh = date('Ymdhms', time());
@@ -107,7 +108,8 @@ switch ($function)
 		else {
 			$scores[$name] = $points;
 			upDate();
-			echo "Adicionado competidor " . $name . " começando com " . $points . ($points > 1 ? " pontos." : " ponto.");
+			echo "Adicionado competidor " . $name . " começando com " . $points . 
+			($points > 1 ? " pontos." : " ponto.");
 		}
 		break;
 		
@@ -130,7 +132,8 @@ switch ($function)
 		if (array_key_exists($name, $scores)) {
 			$scores[$name] = $points;
 			upDate();
-			echo "Pontuação de " . $name . " atualizada para " . $points . ($points > 1 ? " pontos." : " ponto.");
+			echo "Pontuação de " . $name . " atualizada para " . $points . 
+			($points > 1 ? " pontos." : " ponto.");
 		}
 		else {
 			echo "O competidor " . $name . " não existe.";
