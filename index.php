@@ -16,27 +16,18 @@
 //
 // Save it.
 //
-// run /gordice once to learn the options
+// run /gordice once to view the options
 // run /gordice help whenever you need some help.
-//
-// REMEMBER TO ADJUST THESE PARAMETERS:
-//
-// Where are the files?
-$appfolder = "/apps/slackbot/gordice/";
-// 
-// Where is the image to be saved? Leave it as is if you want
-$imgfolder = "images/";
-//
-// Is your website https?
-$urltype = "http://"; 
 //
 //-----------------------------------------------------
 
 
 //GET FROM SLACK AND OTHER STUFF
+$prefix = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://";
+$url = $prefix . $_SERVER['SERVER_NAME'] . substr($_SERVER['PHP_SELF'], 0, strrpos($_SERVER['PHP_SELF'], '/'));
+$imgfolder = "images/";
 $today = date('Y-m-d', time());
 $todayh = date('Ymdhms', time());
-$url = $urltype . $_SERVER['HTTP_HOST'] . $appfolder;
 $channel_id = $_GET["channel_name"];
 $command = $_GET["command"];
 $user_name = $_GET["user_name"];
@@ -69,7 +60,7 @@ else {
 function geraJSON($url, $f){
 	$attachment = array(
 	"title" => "Top Gordice 2018",
-	"image_url" => $url . $f,
+	"image_url" => $url . '/' . $f,
 	"thumb_url" => $url . "topgordiceicon.png",
 	"footer" => "Use o comando '/gordice help' para lista de comandos. Imagem temporária.",
 	"ts" => 123456789
