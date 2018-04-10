@@ -1,6 +1,6 @@
 <?php
 //-----------------------------------------------------
-//GORDICE SLACK SLASH COMMAND
+//GORDICE SLACK SLASH COMMAND v 1.1
 //
 //CREATE AN SLASH COMMAND IN SLACK WITH THE FOLLOWING:
 //
@@ -22,42 +22,53 @@
 //-----------------------------------------------------
 
 
-//GET FROM SLACK AND OTHER STUFF
+//HTTP REQUESTS
 $prefix = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://";
 $url = $prefix . $_SERVER['SERVER_NAME'] . substr($_SERVER['PHP_SELF'], 
 	0, strrpos($_SERVER['PHP_SELF'], '/'));
+$channel_id = $_GET["channel_id"];
+$channel_name = $_GET["channel_name"];
+$text = $_GET["text"];
+
+//VARS
 $imgfolder = "images/";
 $today = date('Y-m-d', time());
 $todayh = date('Ymdhms', time());
-$channel_id = $_GET["channel_name"];
-$command = $_GET["command"];
-$user_name = $_GET["user_name"];
-$text = $_GET["text"];
 $params = explode(" ", $text);
 $function = $params[0];
 $name = $params[1];
 $points = floatval(str_replace(',', '.', $params[2]));
 $varfile = "vars.json";
 
-//UPDATE VARS
-function upDate(){
-	global $varfile;
-	global $scores;
-	file_put_contents($varfile, json_encode($scores));
+//ABORT IF DIRECTMESSAGE
+if ($channel_name == "directmessage") {
+	echo "Olá! Eu sou o bot Gordice!\n\n";
+	echo "Eu sirvo para monitorar os participantes da sua sala\n";
+	echo "que mais trazem gordices para a turma comer.\n\n";
+	echo "Infelizmente, este recurso só serve para canais (salas)...\n\n";
+	echo "Digite /gordice help em um canal para aprender como\n" ;
+	echo "usar o meu sistema.";
+	exit;
 }
 
-//RECOVER ARRAY scores FROM VAR FILE OR CREATE IT
+//RECOVER RANKING FROM JSON AND SORT IT ---- NÃO FAZENDO....
 if (file_exists($varfile)){
 	$scores = json_decode(file_get_contents($varfile),true);
-	asort($scores);
-	$scores = array_reverse($scores);
+	arsort($scores[$channel_id]);
 }
 else {
 	$scores = array();
 	upDate();
 }
 
-//SLACK JSON GEN
+//UPDATE JSON WITH RANKING
+function upDate(){
+	global $varfile;
+	global $scores;
+	file_put_contents($varfile, json_encode($scores));
+}
+
+//SLACK JSON ANSWER
 function geraJSON($url, $f){
 	$attachment = array(
 	"title" => "Top Gordice 2018",
@@ -67,25 +78,36 @@ function geraJSON($url, $f){
 	"ts" => 123456789
 	);
 
-	$attachments = array($attachment);
-
-	$final  = array(
+	$final = array(
 	"response_type" => "in_channel",
-	"text" => "Vamos dar uma olhada na gordice da salinha...",
-	"attachments" => $attachments);
+	"text" => "Vamos dar uma olhada na gordice da salinha " . $channel_name . "...",
+	"attachments" => array($attachment)
+	);
 	
-
 	$myJSON = json_encode($final);
 
-	//resposta JSON
+	//JSON ANSWER
 	header("Content-type:application/json");
 	echo $myJSON;
 }
 
-//CASES
+//DOES THIS CHANNEL HAS A RANKING?
+function check($scores, $channel_id){
+	if (!isset($scores) || !array_key_exists($channel_id, $scores)){
+		echo "Olá! Eu sou o bot Gordice!\n\n";
+		echo "Eu sirvo para monitorar os participantes da sua sala\n";
+		echo "que mais trazem gordices para a turma comer.\n\n";
+		echo "Infelizmente, este canal ainda não tem um placar...\n\n";
+		echo "Digite /gordice help para aprender como\n" ;
+		echo "adicionar, remover ou editar competidores.";
+		exit;
+	}
+}
+
+//ARGUMENT CASES
 switch ($function) 
 	{
-	//USER INPUT WRONG PARAMETERS
+	//USER INPUT WRONG PARAMETERS OR help
 	default:
 		echo "Bot Gordice! Para controlar a gordice da raça!\n\n";
 		echo "Comandos:\n\n";
@@ -101,12 +123,12 @@ switch ($function)
 		
 	//ADD NEW COMPETIDOR
 	case add:
-		//check if exist
-		if (array_key_exists($name, $scores)) {
+		//check if exist		
+		if (isset($scores) && array_key_exists($name, $scores[$channel_id])) {
 			echo "O competidor " . $name . " já existe. Escolha outro nome.";
 		}
 		else {
-			$scores[$name] = $points;
+			$scores[$channel_id][$name] = $points;
 			upDate();
 			echo "Adicionado competidor " . $name . " começando com " . $points . 
 			($points > 1 ? " pontos." : " ponto.");
@@ -116,8 +138,9 @@ switch ($function)
 	//DELETE COMPETIDOR
 	case del:
 		//check if exist
-		if (array_key_exists($name, $scores)) {
-			unset($scores[$name]);
+		check($scores, $channel_id);
+		if (isset($scores) && array_key_exists($name, $scores[$channel_id])) {
+			unset($scores[$channel_id][$name]);
 			upDate();
 			echo "Competidor " . $name . " apagado.";
 		}
@@ -129,8 +152,9 @@ switch ($function)
 	//UPDATE COMPETIDOR'S POINTS
 	case update:
 		//check if exist
-		if (array_key_exists($name, $scores)) {
-			$scores[$name] = $points;
+		check($scores, $channel_id);
+		if (isset($scores) && array_key_exists($name, $scores[$channel_id])) {
+			$scores[$channel_id][$name] = $points;
 			upDate();
 			echo "Pontuação de " . $name . " atualizada para " . $points . 
 			($points > 1 ? " pontos." : " ponto.");
@@ -142,6 +166,8 @@ switch ($function)
 	
 	//SHOW IMAGE
 	case "":
+		check($scores, $channel_id);
+		
 		//clean older than 7 days images
 		foreach(glob($imgfolder . '*.*') as $file) {
 			if((time() - filectime($file)) > 604800) {
@@ -157,15 +183,15 @@ switch ($function)
 		$line = 220;
 		imagettftext($rImg, 20, 0, 60, 180, $colorTitle, $font, "Competidor");
 		imagettftext($rImg, 20, 0, 260, 180, $colorTitle, $font, "Pontos");
-		foreach($scores as $name => $points){
+		foreach($scores[$channel_id] as $name => $points){
 			imagettftext($rImg, 20, 0, 60, $line, $color, $font, $name);
 			imagettftext($rImg, 20, 0, 300, $line, $color, $font, $points);
 			$line = $line + 30;
-		}
+		}	
 		imagejpeg($rImg, $imgfolder . $todayh . ".jpg", 80);
 		imagedestroy($rImg);
 		
-		//json response
+		//JSON ANSWER
 		geraJSON($url, $imgfolder . $todayh . ".jpg");
 		break;
 	}
